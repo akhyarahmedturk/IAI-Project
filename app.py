@@ -1,341 +1,294 @@
 import streamlit as st
 from main import initialize_knowledge_base, apply_rules
 
-# ----------------------------------
-# PAGE CONFIG
-# ----------------------------------
+
+# -----------------------------
+# Theme management & config
+# -----------------------------
+# Check if dark mode is enabled (default to light)
+if 'dark_mode' not in st.session_state:
+    st.session_state.dark_mode = False
+
+# Function to toggle theme
+def toggle_theme():
+    st.session_state.dark_mode = not st.session_state.dark_mode
+    
+
+# -----------------------------
+# Page configuration
+# -----------------------------
 st.set_page_config(
     page_title="Clinic Expert System",
     page_icon="🏥",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="expanded",
 )
 
-# ----------------------------------
-# CUSTOM CSS (Refined Alignment + Style)
-# ----------------------------------
-st.markdown("""
-<style>
-/* App Background */
-.stApp {
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-}
 
-/* Centered Title and Subtitle */
-.main-title {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 3rem;
-    font-weight: 800;
-    color: white;
-    text-shadow: 0 0 40px rgba(0, 255, 255, 1), 0 0 20px rgba(0, 255, 255, 0.8);
-    margin-top: 1rem;
-    margin-bottom: 0.2rem;
-}
-.subtitle {
-    text-align: center;
-    color: #ffffff !important;
-    font-size: 1.4rem;
-    margin-bottom: 2rem;
-    font-weight: 500;
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
-}
+# -----------------------------
+# Custom lightweight CSS - modern, light theme
+# -----------------------------
+st.markdown(
+    """
+    <style>
+    /* Light mode (default) */
+    :root {
+        --bg-color: #f7f9fc;
+        --text-color: #0f1724;
+        --card-bg: white;
+        --card-shadow: 0 6px 20px rgba(16, 24, 40, 0.06);
+        --card-border: 1px solid rgba(16,24,40,0.04);
+        --brand-title: #0b2536;
+        --brand-sub: #3b556b;
+        --muted: #51667a;
+        --result-value: #07203b;
+        --urgent-bg: linear-gradient(90deg,#ffeded,#fff5f5);
+        --high-bg: linear-gradient(90deg,#fff7e6,#fffdf0);
+        --moderate-bg: linear-gradient(90deg,#f7f7ff,#fcfbff);
+        --low-bg: linear-gradient(90deg,#effff6,#fbfff9);
+        --hr-color: rgba(0,0,0,0.1);
+    }
 
-/* Headings */
-h2, h3 {
-    color: #ffffff !important;
-    text-shadow: 0 0 15px rgba(0, 255, 255, 0.7);
-}
-h2 {
-    border-bottom: 4px solid #00ffff;
-    padding-bottom: 0.8rem;
-}
+    /* Dark mode overrides */
+    [data-theme="dark"] {
+        --bg-color: #0f1724;
+        --text-color: #e6edf3;
+        --card-bg: #1a2634;
+        --card-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        --card-border: 1px solid rgba(255,255,255,0.05);
+        --brand-title: #e6edf3;
+        --brand-sub: #8b949e;
+        --muted: #8b949e;
+        --result-value: #e6edf3;
+        --urgent-bg: linear-gradient(90deg,#3d1f1f,#2d1717);
+        --high-bg: linear-gradient(90deg,#3d2f1f,#2d2417);
+        --moderate-bg: linear-gradient(90deg,#1f1f3d,#17172d);
+        --low-bg: linear-gradient(90deg,#1f3d2f,#172d24);
+        --hr-color: rgba(255,255,255,0.1);
+    }
 
-/* Buttons */
-.stButton > button {
-    background: linear-gradient(135deg, #00ffff 0%, #0099ff 100%);
-    color: #1a1a2e;
-    font-size: 1.3rem;
-    font-weight: bold;
-    padding: 0.85rem 2rem;
-    border-radius: 12px;
-    border: 2px solid #00ffff;
-    box-shadow: 0 4px 20px rgba(0, 255, 255, 0.5);
-    transition: all 0.3s ease;
-    width: 100%;
-}
-.stButton > button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 30px rgba(0, 255, 255, 0.8);
-}
+    /* App background and font */
+    .stApp {
+        background: var(--bg-color);
+        color: var(--text-color);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+    }
 
-/* Results Section */
-.assessment-section {
-    margin-top: 2rem;
-    text-align: center;
-}
-.result-container {
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    gap: 2rem;
-    margin-top: 2rem;
-}
-.result-card {
-    background: linear-gradient(135deg, #1e1e2e, #2b2b3c);
-    border: 2px solid #444;
-    border-radius: 20px;
-    box-shadow: 0 6px 20px rgba(0,0,0,0.4);
-    padding: 1.5rem 2rem;
-    min-width: 260px;
-    text-align: center;
-    color: #EEE;
-    transition: transform 0.2s ease;
-}
-.result-card:hover {
-    transform: translateY(-5px);
-}
-.result-title {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: #B5B5B5;
-    margin-bottom: 0.3rem;
-}
-.result-value {
-    font-size: 1.6rem;
-    font-weight: 700;
-    color: #79b8ff;
-}
+    /* Header */
+    .header {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 10px 0 20px 0;
+    }
+    .brand-title {
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--brand-title);
+    }
+    .brand-sub {
+        color: var(--brand-sub);
+        font-size: 14px;
+        margin-top: -4px;
+    }
 
-/* Recommendation & Patient Info */
-.info-box {
-    background: #202030;
-    border: 2px solid #3a3a4a;
-    border-radius: 16px;
-    padding: 1.5rem 2rem;
-    margin-top: 1rem;
-    color: #D8D8D8;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.4);
-}
-.info-label {
-    font-weight: 600;
-    color: #9E9E9E;
-    margin-bottom: 0.4rem;
-}
+    /* Cards */
+    .card {
+        background: var(--card-bg);
+        border-radius: 12px;
+        padding: 18px;
+        box-shadow: var(--card-shadow);
+        border: var(--card-border);
+    }
 
-/* Urgency Badge */
-.urgency-badge {
-    color: #1a1a2e;
-    font-weight: bold;
-    padding: 0.5rem 2rem;
-    border-radius: 25px;
-    display: inline-block;
-    margin-top: 1rem;
-    font-size: 1.2rem;
-}
+    .result-value {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--result-value);
+    }
+
+    .muted {
+        color: var(--muted);
+        font-size: 13px;
+    }
+
+    hr {
+        border-color: var(--hr-color);
+    }
+
+    /* Theme toggle button */
+    .theme-toggle {
+        position: fixed;
+        top: 1rem;
+        right: 1rem;
+        padding: 8px 12px;
+        border-radius: 8px;
+        background: var(--card-bg);
+        border: var(--card-border);
+        color: var(--text-color);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        z-index: 1000;
+    }
+
+    /* Urgency indicators with theme support */
+    .urgent {
+        background: var(--urgent-bg);
+        border-left: 4px solid #ff4d4f;
+        padding: 12px;
+        border-radius: 8px;
+        color: var(--text-color);
+    }
+
+    .high {
+        background: var(--high-bg);
+        border-left: 4px solid #ff9500;
+        padding: 12px;
+        border-radius: 8px;
+        color: var(--text-color);
+    }
+
+    .moderate {
+        background: var(--moderate-bg);
+        border-left: 4px solid #7a7aff;
+        padding: 12px;
+        border-radius: 8px;
+        color: var(--text-color);
+    }
+
+    .low {
+        background: var(--low-bg);
+        border-left: 4px solid #16a34a;
+        padding: 12px;
+        border-radius: 8px;
+        color: var(--text-color);
+    }
+
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
 
-/* --- */
-div[data-testid="stCheckbox"] div[data-testid="stMarkdownContainer"],
-div[data-testid="stCheckbox"] label p,
-div[data-testid="stCheckbox"] label span {
-    color: #ffffff !important;
-    opacity: 1 !important;
-    font-weight: 600 !important;
-    text-shadow: none !important;
-}
+# -----------------------------
+# Layout: sidebar for demographics & controls
+# -----------------------------
 
-/* Optional: brighter emojis and icons */
-div[data-testid="stCheckbox"] span[role="img"] {
-    filter: brightness(1.5);
-}
-
-/* Optional: cyan accent for checkmarks */
-div[data-testid="stCheckbox"] input[type="checkbox"] {
-    accent-color: #00e5ff;
-}
-
-</style>
+# Add data-theme attribute based on dark mode state
+st.markdown(f"""
+    <script>
+        document.querySelector('.stApp').setAttribute('data-theme', {'dark' if st.session_state.dark_mode else 'light'});
+    </script>
+    <button onclick="document.querySelector('.stApp').setAttribute('data-theme', document.querySelector('.stApp').getAttribute('data-theme') === 'dark' ? 'light' : 'dark')" class="theme-toggle">
+        {" 🌙 Dark" if not st.session_state.dark_mode else " ☀️ Light"}
+    </button>
 """, unsafe_allow_html=True)
 
-# ----------------------------------
-# HEADER
-# ----------------------------------
-st.markdown("<div class='main-title'>🏥 <span>Clinic Expert System</span></div>", unsafe_allow_html=True)
-st.markdown("<p class='subtitle'>AI-Powered Patient Assessment & Referral System</p>", unsafe_allow_html=True)
-
-# ----------------------------------
-# PATIENT DEMOGRAPHICS
-# ----------------------------------
-st.markdown("## 👤 Patient Demographics")
-col1, col2 = st.columns(2)
-
-with col1:
-    gender = st.selectbox(
-        "Gender",
-        ["Male", "Female", "Other"],
-        key="gender"
-    )
-
-with col2:
-    age_group = st.selectbox(
-        "Age Group",
-        ["0-12 (Child)", "13-17 (Adolescent)", "18-39 (Young Adult)",
-         "40-64 (Middle-aged Adult)", "65+ (Senior)"],
-        key="age_group"
-    )
-
-st.markdown("---")
-
-# ----------------------------------
-# SYMPTOM ASSESSMENT
-# ----------------------------------
-st.markdown("## 🩺 Symptom Assessment")
-st.markdown("<p style='color: #ffffff; margin-bottom: 1.5rem;'>Please select all symptoms that apply to the patient:</p>", unsafe_allow_html=True)
+st.markdown("<div class='header'><div><span style='font-size:34px'>🏥</span></div><div><div class='brand-title'>Clinic Expert System</div><div class='brand-sub'>AI-assisted patient assessment</div></div></div>", unsafe_allow_html=True)
 
 symptoms = initialize_knowledge_base()
+
+# Sidebar inputs (demographics + quick controls)
+with st.sidebar:
+    st.markdown("## Patient Info")
+    gender = st.selectbox("Gender", ["Male", "Female", "Other"], key="gender")
+    age_group = st.selectbox(
+        "Age Group",
+        ["0-12 (Child)", "13-17 (Adolescent)", "18-39 (Young Adult)", "40-64 (Middle-aged Adult)", "65+ (Senior)"],
+        key="age_group",
+    )
+
+    st.markdown("---")
+    st.markdown("## Symptom Duration")
+    duration_long = st.checkbox("Symptoms lasting more than 10 days", key="duration_long")
+
+    st.markdown("---")
+    st.caption("Tip: Select symptoms in the main area, then click Analyze.")
+    st.markdown("\n")
+    analyze_button_sidebar = st.button("Analyze (Sidebar)", key="analyze_sidebar")
+
+
+# -----------------------------
+# Main symptom selection area
+# -----------------------------
+st.markdown("## Symptom Assessment")
+st.markdown("Select all symptoms that apply:")
+
 patient_data = {}
 
-# Temperature & General Symptoms
-st.markdown("### 🌡️ Temperature & General Symptoms")
+st.markdown("### General")
 col1, col2, col3 = st.columns(3)
 with col1:
-    patient_data['fever'] = st.checkbox("Fever (>100.4°F)")
-    patient_data['high_fever'] = st.checkbox("High Fever (>103°F)")
+    patient_data['fever'] = st.checkbox("Fever (>100.4°F)", key="fever")
+    patient_data['high_fever'] = st.checkbox("High Fever (>103°F)", key="high_fever")
 with col2:
-    patient_data['fatigue'] = st.checkbox("Fatigue/Weakness")
-    patient_data['body_aches'] = st.checkbox("Body Aches")
+    patient_data['fatigue'] = st.checkbox("Fatigue/Weakness", key="fatigue")
+    patient_data['body_aches'] = st.checkbox("Body Aches", key="body_aches")
 with col3:
-    patient_data['headache'] = st.checkbox("Headache")
-    patient_data['nausea'] = st.checkbox("Nausea/Vomiting")
+    patient_data['headache'] = st.checkbox("Headache", key="headache")
+    patient_data['nausea'] = st.checkbox("Nausea/Vomiting", key="nausea")
 
-# Respiratory
-st.markdown("### 🫁 Respiratory Symptoms")
+st.markdown("### Respiratory")
 col1, col2, col3 = st.columns(3)
 with col1:
-    patient_data['cough'] = st.checkbox("Cough")
-    patient_data['severe_cough'] = st.checkbox("Severe/Persistent Cough")
+    patient_data['cough'] = st.checkbox("Cough", key="cough")
+    patient_data['severe_cough'] = st.checkbox("Severe/Persistent Cough", key="severe_cough")
 with col2:
-    patient_data['sore_throat'] = st.checkbox("Sore Throat")
-    patient_data['difficulty_breathing'] = st.checkbox("⚠️ Difficulty Breathing")
+    patient_data['sore_throat'] = st.checkbox("Sore Throat", key="sore_throat")
+    patient_data['difficulty_breathing'] = st.checkbox("Difficulty Breathing", key="difficulty_breathing")
 with col3:
-    patient_data['chest_pain'] = st.checkbox("⚠️ Chest Pain")
+    patient_data['chest_pain'] = st.checkbox("Chest Pain", key="chest_pain")
 
-# Nasal & Eye
-st.markdown("### 👃 Nasal & Eye Symptoms")
+st.markdown("### Nasal / Eyes")
 col1, col2, col3 = st.columns(3)
 with col1:
-    patient_data['runny_nose'] = st.checkbox("Runny/Stuffy Nose")
+    patient_data['runny_nose'] = st.checkbox("Runny / Stuffy Nose", key="runny_nose")
 with col2:
-    patient_data['sneezing'] = st.checkbox("Sneezing")
+    patient_data['sneezing'] = st.checkbox("Sneezing", key="sneezing")
 with col3:
-    patient_data['itchy_eyes'] = st.checkbox("Itchy/Watery Eyes")
+    patient_data['itchy_eyes'] = st.checkbox("Itchy / Watery Eyes", key="itchy_eyes")
 
-# Duration
-st.markdown("### ⏱️ Duration")
-patient_data['duration_long'] = st.checkbox("Symptoms lasting more than 10 days")
+# Ensure duration from sidebar is included in patient_data
+patient_data['duration_long'] = duration_long
 
-st.markdown("---")
-
-# ----------------------------------
-# ANALYZE BUTTON
-# ----------------------------------
+# Centered analyze button in main area (keeps both sidebar and main triggers)
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
-    analyze_button = st.button("🔍 Analyze Symptoms & Get Recommendation")
+    analyze_button = st.button("🔍 Analyze Symptoms & Get Recommendation", key="analyze_main")
 
-# ----------------------------------
-# RESULTS
-# ----------------------------------
-if analyze_button:
+# If either analyze button is clicked, run the logic
+if analyze_button or analyze_button_sidebar:
     diagnosis, recommendation, urgency, explanation = apply_rules(patient_data)
 
-    st.markdown("<div class='assessment-section'>", unsafe_allow_html=True)
-    st.markdown("## 📋 Assessment Results")
-
-    # Urgency color mapping
-    urgency_colors = {
-        "URGENT": "#ff4757",
-        "HIGH": "#ffa502",
-        "MODERATE": "#f0e68c",
-        "LOW": "#2ed573"
+    # Map urgency to styles
+    urgency_map = {
+        "URGENT": ("urgent", "URGENT"),
+        "HIGH": ("high", "HIGH"),
+        "MODERATE": ("moderate", "MODERATE"),
+        "LOW": ("low", "LOW"),
     }
-    urgency_color = urgency_colors.get(urgency, "#2ed573")
+    urgency_class, urgency_label = urgency_map.get(urgency, ("low", urgency))
 
-    # Result cards
-    st.markdown(f"""
-    <div class='result-container'>
-        <div class='result-card'>
-            <div class='result-title'>Condition</div>
-            <div class='result-value'>{diagnosis}</div>
-        </div>
-        <div class='result-card'>
-            <div class='result-title'>Urgency</div>
-            <div class='result-value' style='color:{urgency_color};'>{urgency}</div>
-        </div>
-        <div class='result-card'>
-            <div class='result-title'>Explanation</div>
-            <div class='result-value' style='font-size:1rem;'>{explanation}</div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
+    # Results layout
+    st.markdown("---")
+    st.markdown("## Assessment Results")
 
-    # Recommendation
-    st.markdown("<h3 style='text-align:center; margin-top:2rem;'>Recommendation</h3>", unsafe_allow_html=True)
-    st.markdown(f"""
-    <div class='info-box'>
-        <div class='info-label'>Suggested Action:</div>
-        {recommendation}
-    </div>
-    """, unsafe_allow_html=True)
+    left, right = st.columns([2, 1])
 
-    # Patient Info
-    st.markdown("<h3 style='text-align:center; margin-top:2rem;'>Patient Information</h3>", unsafe_allow_html=True)
-    st.markdown(f"""
-    <div class='info-box'>
-        <div class='info-label'>Gender:</div> {gender}<br>
-        <div class='info-label'>Age Group:</div> {age_group}
-    </div>
-    """, unsafe_allow_html=True)
+    with left:
+        st.markdown(f"<div class='card'> <div style='display:flex;justify-content:space-between;align-items:center;'><div><div class='muted'>Condition</div><div class='result-value'>{diagnosis}</div></div><div style='text-align:right'><div class='muted'>Urgency</div><div class='{urgency_class}' style='display:inline-block;margin-top:6px;padding:6px 12px;border-radius:8px;font-weight:600'>{urgency_label}</div></div></div><hr style='margin:12px 0'> <div class='muted'>Explanation</div><div style='margin-top:8px'>{explanation}</div></div>", unsafe_allow_html=True)
 
-    # Urgency alert box
-    if urgency == "URGENT":
-        st.markdown(f"""
-        <div style='background:linear-gradient(135deg,#ff4757,#ff6b81);border-radius:15px;padding:1.5rem;margin:1.5rem 0;
-        border:2px solid #ff4757;box-shadow:0 5px 20px rgba(255,71,87,0.4);color:white;text-align:center;font-weight:bold;'>
-        🚨 URGENT: Patient should see a doctor IMMEDIATELY or visit emergency room.
-        </div>
-        """, unsafe_allow_html=True)
-    elif urgency == "HIGH":
-        st.markdown(f"""
-        <div style='background:linear-gradient(135deg,#ffa502,#ffb833);border-radius:15px;padding:1.5rem;margin:1.5rem 0;
-        border:2px solid #ffa502;box-shadow:0 5px 20px rgba(255,165,2,0.4);color:white;text-align:center;font-weight:bold;'>
-        ⚠️ HIGH PRIORITY: Schedule doctor appointment as soon as possible.
-        </div>
-        """, unsafe_allow_html=True)
-    elif urgency == "MODERATE":
-        st.markdown(f"""
-        <div style='background:linear-gradient(135deg,#f0e68c,#ffd93d);border-radius:15px;padding:1.5rem;margin:1.5rem 0;
-        border:2px solid #f0e68c;box-shadow:0 5px 20px rgba(240,230,140,0.4);color:#1a1a2e;text-align:center;font-weight:bold;'>
-        ℹ️ MODERATE: Schedule doctor appointment within 1–2 days.
-        </div>
-        """, unsafe_allow_html=True)
-    else:
-        st.markdown(f"""
-        <div style='background:linear-gradient(135deg,#2ed573,#7bed9f);border-radius:15px;padding:1.5rem;margin:1.5rem 0;
-        border:2px solid #2ed573;box-shadow:0 5px 20px rgba(46,213,115,0.4);color:white;text-align:center;font-weight:bold;'>
-        ✅ LOW PRIORITY: Home care recommended. See doctor if symptoms persist.
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown("<div style='height:14px'></div>", unsafe_allow_html=True)
 
-# ----------------------------------
-# FOOTER
-# ----------------------------------
-st.markdown("---")
-st.markdown("""
-<div style='text-align:center;color:#a0a0ff;padding:2rem 0;'>
-<p><strong>Disclaimer:</strong> This system provides decision support only and should not replace professional medical judgment.</p>
-<p>Always consult with qualified healthcare professionals for accurate diagnosis and treatment.</p>
-</div>
-""", unsafe_allow_html=True)
+        st.markdown("<div class='card'><div class='muted'>Recommendation</div><div style='margin-top:8px;font-weight:700'>" + recommendation + "</div></div>", unsafe_allow_html=True)
+
+    with right:
+        st.markdown("<div class='card'><div class='muted'>Patient Information</div>", unsafe_allow_html=True)
+        st.markdown(f"<div style='margin-top:10px'><strong>Gender:</strong> {gender}<br><strong>Age group:</strong> {age_group}<br><strong>Duration &gt;10d:</strong> {'Yes' if patient_data['duration_long'] else 'No'}</div></div>", unsafe_allow_html=True)
+
+    st.markdown("---")
+    st.markdown("<div class='muted'>Disclaimer: This system provides decision support only and should not replace professional medical judgment.</div>", unsafe_allow_html=True)
+
