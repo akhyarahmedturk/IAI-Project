@@ -269,7 +269,9 @@ if analyze_button or analyze_button_sidebar:
         "HIGH": ("high", "HIGH"),
         "MODERATE": ("moderate", "MODERATE"),
         "LOW": ("low", "LOW"),
+        "NULL": ("-", "NULL","null")
     }
+    
     urgency_class, urgency_label = urgency_map.get(urgency, ("low", urgency))
 
     # Results layout

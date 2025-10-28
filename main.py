@@ -172,8 +172,8 @@ def apply_rules(symptoms):
     return (
         "Insufficient Symptoms for Diagnosis",
         "MONITOR SYMPTOMS",
-        "LOW",
-        "No clear pattern detected. Monitor symptoms and consult doctor if condition worsens."
+        "-",
+        "No clear pattern detected.Please Enter symptoms."
     )
 
 def display_recommendation(diagnosis, recommendation, urgency, explanation):
